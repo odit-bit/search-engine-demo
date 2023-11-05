@@ -13,7 +13,7 @@ services:
       - db
     build:
       context: .
-      dockerfile: graph.dockerfile
+      dockerfile: ./graph/graph.dockerfile
     restart: on-failure
     environment:
       - DSN=host=db dbname=postgres password=test user=postgres
@@ -23,7 +23,7 @@ services:
       - db
     build:
       context: .
-      dockerfile: index.dockerfile
+      dockerfile: ./index/index.dockerfile
     restart: on-failure
     environment:
       - DSN=host=db dbname=postgres password=test user=postgres
@@ -34,8 +34,15 @@ services:
       - index
     build:
       context: .
-      dockerfile: crawler.dockerfile
-    restart: on-failure
+      dockerfile: ./crawler/crawler.dockerfile
+
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 60s
+
     environment:
       - LINKSTORE_SERVER_ADDRESS=graph:8181
       - INDEXSTORE_SERVER_ADDRESS=index:8383
@@ -46,8 +53,15 @@ services:
       - index
     build:
       context: .
-      dockerfile: pagerank.dockerfile
-    restart: on-failure
+      dockerfile: ./pagerank/pagerank.dockerfile
+
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 60s
+
     environment:
       - LINKSTORE_SERVER_ADDRESS=graph:8181
       - INDEXSTORE_SERVER_ADDRESS=index:8383
@@ -58,7 +72,8 @@ services:
       - index
     build:
       context: .
-      dockerfile: ui.dockerfile
+      dockerfile: ./ui/ui.dockerfile
+
     restart: on-failure
 
     environment:

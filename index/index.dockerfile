@@ -8,17 +8,17 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /
 
-COPY ui ui
+COPY index index
 COPY go.mod .
 COPY go.sum .
 
-RUN go mod download
+# RUN go mod download
 
 # make static image
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
-RUN go build -o ./frontend ./ui/main.go
+RUN go build -o indexServer ./index/
 
 
 ########################################################
@@ -29,9 +29,9 @@ FROM gcr.io/distroless/base-debian11 AS build-release-stage
 WORKDIR /
 
 COPY --from=build-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=build-stage frontend frontend
+COPY --from=build-stage indexServer indexServer
 
-EXPOSE 8080
+EXPOSE 8383
 
-ENTRYPOINT [ "./frontend" ]
+ENTRYPOINT [ "./indexServer" ]
 # CMD [ "./monolith" ]

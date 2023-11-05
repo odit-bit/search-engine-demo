@@ -8,17 +8,17 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /
 
-COPY index index
+COPY graph graph
 COPY go.mod .
 COPY go.sum .
 
-RUN go mod download
+# RUN go mod download
 
 # make static image
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
-RUN go build -o ./indexServer ./index/main.go
+RUN go build -o graphServer ./graph/
 
 
 ########################################################
@@ -29,9 +29,9 @@ FROM gcr.io/distroless/base-debian11 AS build-release-stage
 WORKDIR /
 
 COPY --from=build-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=build-stage indexServer indexServer
+COPY --from=build-stage graphServer graphServer
 
-EXPOSE 8383
+EXPOSE 8181
 
-ENTRYPOINT [ "./indexServer" ]
+ENTRYPOINT [ "./graphServer" ]
 # CMD [ "./monolith" ]

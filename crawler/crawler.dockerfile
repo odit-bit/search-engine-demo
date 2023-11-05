@@ -8,7 +8,7 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /
 
-COPY pagerank pagerank
+COPY crawler crawler
 COPY go.mod .
 COPY go.sum .
 
@@ -18,7 +18,7 @@ RUN go mod download
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
-RUN go build -o ./pagerank-service ./pagerank/
+RUN go build -o crawl-service ./crawler/
 
 
 ########################################################
@@ -29,9 +29,9 @@ FROM gcr.io/distroless/base-debian11 AS build-release-stage
 WORKDIR /
 
 COPY --from=build-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=build-stage pagerank-service pagerank-service
+COPY --from=build-stage crawl-service crawl-service
 
 EXPOSE 8282
 
-ENTRYPOINT [ "./pagerank-service" ]
+ENTRYPOINT [ "./crawl-service" ]
 # CMD [ "./monolith" ]

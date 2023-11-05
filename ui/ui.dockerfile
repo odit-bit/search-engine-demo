@@ -6,21 +6,20 @@ FROM golang:1.21-alpine as build-stage
 RUN apk add --no-cache git
 RUN apk --no-cache add ca-certificates
 
+# relative to the base image
 WORKDIR /
 
-COPY app app/
-COPY x x/
+COPY ui ui
 COPY go.mod .
 COPY go.sum .
-COPY *.go .
+
 RUN go mod download
-RUN go test
 
 # make static image
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
-RUN go build -o /rpcCrawler ./app/rpc/main.go
+RUN go build -o frontend ./ui/
 
 
 ########################################################
@@ -31,9 +30,9 @@ FROM gcr.io/distroless/base-debian11 AS build-release-stage
 WORKDIR /
 
 COPY --from=build-stage /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=build-stage /rpcCrawler /rpcCrawler
+COPY --from=build-stage frontend frontend
 
 EXPOSE 8080
 
-ENTRYPOINT [ "./rpcCrawler" ]
+ENTRYPOINT [ "./frontend" ]
 # CMD [ "./monolith" ]

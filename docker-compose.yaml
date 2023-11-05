@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgres:alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_PASSWORD=test
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - data:/var/lib/postgresql/data
+
+  graph:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: graph.dockerfile
+    restart: on-failure
+    environment:
+      - DSN=host=db dbname=postgres password=test user=postgres
+
+  index:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: index.dockerfile
+    restart: on-failure
+    environment:
+      - DSN=host=db dbname=postgres password=test user=postgres
+
+  crawler:
+    depends_on:
+      - graph
+      - index
+    build:
+      context: .
+      dockerfile: crawler.dockerfile
+    restart: on-failure
+    environment:
+      - LINKSTORE_SERVER_ADDRESS=graph:8181
+      - INDEXSTORE_SERVER_ADDRESS=index:8383
+
+  pagerank:
+    depends_on:
+      - graph
+      - index
+    build:
+      context: .
+      dockerfile: pagerank.dockerfile
+    restart: on-failure
+    environment:
+      - LINKSTORE_SERVER_ADDRESS=graph:8181
+      - INDEXSTORE_SERVER_ADDRESS=index:8383
+
+  ui:
+    depends_on:
+      - graph
+      - index
+    build:
+      context: .
+      dockerfile: ui.dockerfile
+    restart: on-failure
+
+    environment:
+      - LINKSTORE_SERVER_ADDRESS=graph:8181
+      - INDEXSTORE_SERVER_ADDRESS=index:8383
+    ports:
+      - 8080:8080
+
+volumes:
+  data:
